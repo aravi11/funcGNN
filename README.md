@@ -1,6 +1,6 @@
 Installation Steps: 
 
-1. Download the git repo via command : '''git clone https://github.com/Metamorph-KTH/CFG_Cloning.git '''
+1. Download the git repo via command : < git clone https://github.com/Metamorph-KTH/CFG_Cloning.git >
    Later go to the folder CFG_Cloning by commnand: ''' cd CFG_Cloning '''   
 
 2. Create a python 3 virtual environment to run so that it doesnt disturb other program's dependencies. Lets name the virtual environment as clone_env
