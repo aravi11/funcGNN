@@ -1,0 +1,38 @@
+digraph "float calWeightedAverage_DC_EQ_m3(float[],float[],int)" {
+    label="float calWeightedAverage_DC_EQ_m3(float[],float[],int)";
+    node [shape=box];
+    "0" [style=filled,fillcolor=gray,label="r0 := @parameter0",];
+    "1" [label="r1 := @parameter1",];
+    "0"->"1";
+    "2" [label="i0 := @parameter2",];
+    "1"->"2";
+    "3" [label="f0 = 0.0F",];
+    "2"->"3";
+    "4" [label="f1 = 0.0F",];
+    "3"->"4";
+    "5" [label="i1 = 0",];
+    "4"->"5";
+    "6" [label="goto label1",];
+    "5"->"6";
+    "12" [label="label1: if i1 < i0 goto label0",];
+    "6"->"12";
+    "7" [label="label0: $f3 = r0[i1]",];
+    "8" [label="$f4 = r1[i1]",];
+    "7"->"8";
+    "9" [label="$f5 = $f3 * $f4",];
+    "8"->"9";
+    "10" [label="f0 = f0 + $f5",];
+    "9"->"10";
+    "11" [label="i1 = i1 + 1",];
+    "10"->"11";
+    "11"->"12";
+    "12"->"7";
+    "13" [label="$f6 = (float) i0",];
+    "12"->"13";
+    "14" [label="f2 = f0 / $f6",];
+    "13"->"14";
+    "15" [label="f7 = f0",];
+    "14"->"15";
+    "16" [style=filled,fillcolor=lightgray,label="return f2",];
+    "15"->"16";
+}

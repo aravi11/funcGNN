@@ -1,0 +1,31 @@
+digraph "int countNonZeros_L_EQ_m4(float[],int)" {
+    label="int countNonZeros_L_EQ_m4(float[],int)";
+    node [shape=box];
+    "0" [style=filled,fillcolor=gray,label="r0 := @parameter0",];
+    "1" [label="i0 := @parameter1",];
+    "0"->"1";
+    "2" [label="i1 = 0",];
+    "1"->"2";
+    "3" [label="i2 = 0",];
+    "2"->"3";
+    "4" [label="goto label2",];
+    "3"->"4";
+    "10" [label="label2: $i4 = i0 - 1",];
+    "4"->"10";
+    "5" [label="label0: $f0 = r0[i2]",];
+    "6" [label="$b3 = $f0 cmpl 0.0F",];
+    "5"->"6";
+    "7" [label="if $b3 == 0 goto label1",];
+    "6"->"7";
+    "8" [label="i1 = i1 + 1",];
+    "7"->"8";
+    "9" [label="label1: i2 = i2 + 1",];
+    "7"->"9";
+    "8"->"9";
+    "9"->"10";
+    "11" [label="if i2 <= $i4 goto label0",];
+    "10"->"11";
+    "11"->"5";
+    "12" [style=filled,fillcolor=lightgray,label="return i1",];
+    "11"->"12";
+}
