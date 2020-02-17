@@ -15,7 +15,7 @@ Installation Steps:
    Command: ***pip3 install -r requirements.txt*** 
 
 5. Now its time to generate the graph similarity jsons. The input graphs are provided in folder DotFiles. In case you want to add your own graph files, make sure to add the graph filenames to filenames.txt before executing. **(*Note this is very important)** You can do this by command:
-***ls ./DotFiles > filenames.txt***  
+***ls ./DotFiles/ > filenames.txt***  
    To run the graph.py file using command : 
    ***python3 graph.py***
    
