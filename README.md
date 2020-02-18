@@ -7,9 +7,9 @@ Installation Steps:
 
 2. Create a python 3 virtual environment to run so that it doesnt disturb other program's dependencies. Lets name the virtual environment as clone_env
    Command: ***virtualenv -p python3 clone_env***
-  If virtual environment is not installed in the system follow the following steps first: 
-  ***sudo apt-get install python3-pip***
-  ***pip3 install virtualenv***
+  If virtual environment is not installed in the system follow the following steps first: \
+  ***sudo apt-get install python3-pip*** \
+  ***pip3 install virtualenv***\
 
 3. Activate the environement using the command :
 ***source ./clone_env/bin/activate***
