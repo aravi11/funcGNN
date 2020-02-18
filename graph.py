@@ -80,15 +80,16 @@ def main(): #main function from where the program starts
     totalGraphJsons = (len_dotFileList*(len_dotFileList-1)/2)+len_dotFileList  #total number of graph similarity json samples
     print("Total Graph Similarity json samples: " + str(int(totalGraphJsons)))
 
-    for i in dotFileList:
-        for j in dotFileList:
-            if dotFileList.index(j) >= dotFileList.index(i):
+    #Code for generating graph Similarity json. Takes a non-symmetric pair of graphs from a list and returns their json data
+    for dotFile_i in dotFileList:
+        for dotFile_j in dotFileList:
+            if dotFileList.index(dotFile_j) >= dotFileList.index(dotFile_i):
                 counter += 1
-                g1_name = i.split('.')[0]
-                g2_name = j.split('.')[0]
+                g1_name = dotFile_i.split('.')[0] #gets the name of first dotFile without its extension
+                g2_name = dotFile_j.split('.')[0] #gets the name of second dotFile without its extension
 
-                graph_1 = nx.drawing.nx_pydot.read_dot(str(dotFile_data_path) + str(i))
-                graph_2 = nx.drawing.nx_pydot.read_dot(str(dotFile_data_path) + str(j))
+                graph_1 = nx.drawing.nx_pydot.read_dot(str(dotFile_data_path) + str(dotFile_i))
+                graph_2 = nx.drawing.nx_pydot.read_dot(str(dotFile_data_path) + str(dotFile_j))
 
                 jsonData = getJsonData(graph_1, graph_2)
                 dumpJson(jsonData, g1_name, g2_name)
