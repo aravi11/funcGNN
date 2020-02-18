@@ -4,6 +4,41 @@ import csv
 import pickle
 from collections import OrderedDict
 import json
+import concurrent.futures as cf
+import time as t
+
+
+def getGraphDiff(files, index):
+    print("Started pair : " + str(files) + " with index:  "+ str(index))
+    startTime = t.perf_counter()
+    dotFile_data_path = './DotFiles/'
+    file1 = files.split(',')[0]
+    file2 = files.split(',')[1]
+    g1_name = file1.split('.')[0]  # gets the name of first dotFile without its extension
+    g2_name = file2.split('.')[0]  # gets the name of second dotFile without its extension
+
+    graph_1 = nx.drawing.nx_pydot.read_dot(str(dotFile_data_path) + str(file1))
+    graph_2 = nx.drawing.nx_pydot.read_dot(str(dotFile_data_path) + str(file2))
+
+    jsonData = getJsonData(graph_1, graph_2)
+    dumpJson(jsonData, g1_name, g2_name)
+    endTime = t.perf_counter()
+    totalTime = endTime - startTime
+
+    print("Finished working on pair: " + str(files))
+
+    #print('Total time : '+str(totalTime)+ '\n')
+
+def runParallelCode(pairList):
+
+    with cf.ProcessPoolExecutor() as executor:
+        results = [executor.submit(getGraphDiff, files, pairList.index(files)) for files in pairList]
+
+
+    for f in cf.as_completed(results):
+        if str(type(f.result()))=="<class 'NoneType'>":
+            pass
+        else: print(">>>>>>>>" + str(f.result()))
 
 
 def getJsonData(graph_1,graph_2):
@@ -42,7 +77,7 @@ def getJsonData(graph_1,graph_2):
 
     # get graph edit distance
     ged = nx.graph_edit_distance(sortedIntGraph_1, sortedIntGraph_2, node_match=return_eq)
-    #ged = 2 '''only for testing. Comment while running it in production'''
+    #ged = 2 #only for testing. Comment while running it in production
 
     # generate the json files
     jsonDict = {}
@@ -51,6 +86,8 @@ def getJsonData(graph_1,graph_2):
     jsonDict["labels_1"] = nodeLabelList_g1
     jsonDict["labels_2"] = nodeLabelList_g2
     jsonDict["ged"] = int(ged)
+
+    #print(jsonDict)
     return jsonDict
 
 
@@ -65,7 +102,7 @@ def dumpJson(jsonFile, g1, g2): #function to dump the Json files
 def main(): #main function from where the program starts
 
     dotFileList= []
-    dotFile_data_path = './DotFiles/'
+    #dotFile_data_path = './DotFiles/test'
 
     with open('./filenames.txt', 'r') as csvFile:
         reader = csv.reader(csvFile)
@@ -79,22 +116,19 @@ def main(): #main function from where the program starts
     len_dotFileList = len(dotFileList)
     totalGraphJsons = (len_dotFileList*(len_dotFileList-1)/2)+len_dotFileList  #total number of graph similarity json samples
     print("Total Graph Similarity json samples: " + str(int(totalGraphJsons)))
-
+    pairList = []
     #Code for generating graph Similarity json. Takes a non-symmetric pair of graphs from a list and returns their json data
     for dotFile_i in dotFileList:
         for dotFile_j in dotFileList:
             if dotFileList.index(dotFile_j) >= dotFileList.index(dotFile_i):
-                counter += 1
-                g1_name = dotFile_i.split('.')[0] #gets the name of first dotFile without its extension
-                g2_name = dotFile_j.split('.')[0] #gets the name of second dotFile without its extension
 
-                graph_1 = nx.drawing.nx_pydot.read_dot(str(dotFile_data_path) + str(dotFile_i))
-                graph_2 = nx.drawing.nx_pydot.read_dot(str(dotFile_data_path) + str(dotFile_j))
+                pairList.append(str(dotFile_i + ','+ str(dotFile_j)))
 
-                jsonData = getJsonData(graph_1, graph_2)
-                dumpJson(jsonData, g1_name, g2_name)
-                if counter%100 ==0:
-                    print(str(counter) + '/' + str(int(totalGraphJsons))) #Just to see status of the run
+    runParallelCode(pairList)
 
 if __name__ == '__main__':
+    startTime = t.perf_counter()
     main()
+    endTime = t.perf_counter()
+    totalTime = endTime - startTime
+    print("Total Time : " + str(totalTime))
