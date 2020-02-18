@@ -9,7 +9,7 @@ import time as t
 
 
 def getGraphDiff(files, index):
-    print("Started pair : " + str(files) + " with index:  "+ str(index))
+    print("Started pair with index:  "+ str(index))
     startTime = t.perf_counter()
     dotFile_data_path = './DotFiles/'
     file1 = files.split(',')[0]
@@ -25,13 +25,13 @@ def getGraphDiff(files, index):
     endTime = t.perf_counter()
     totalTime = endTime - startTime
 
-    print("Finished working on pair: " + str(files))
+    print("Finished pair with index:  "+ str(index))
 
     #print('Total time : '+str(totalTime)+ '\n')
 
 def runParallelCode(pairList):
 
-    with cf.ProcessPoolExecutor() as executor:
+    with cf.ProcessPoolExecutor(max_workers =45) as executor:
         results = [executor.submit(getGraphDiff, files, pairList.index(files)) for files in pairList]
 
 
