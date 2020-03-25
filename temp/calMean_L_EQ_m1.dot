@@ -1,0 +1,30 @@
+digraph "float calMean_L_EQ_m1(float[],int)" {
+    label="float calMean_L_EQ_m1(float[],int)";
+    node [shape=box];
+    "0" [style=filled,fillcolor=gray,label="r0 := @parameter0",];
+    "1" [label="i0 := @parameter1",];
+    "0"->"1";
+    "2" [label="f0 = 0.0F",];
+    "1"->"2";
+    "3" [label="i1 = 0",];
+    "2"->"3";
+    "4" [label="goto label1",];
+    "3"->"4";
+    "9" [label="label1: if i1 < i0 goto label0",];
+    "4"->"9";
+    "5" [label="label0: $f2 = r0[i1]",];
+    "6" [label="$f3 = neg $f2",];
+    "5"->"6";
+    "7" [label="f0 = f0 - $f3",];
+    "6"->"7";
+    "8" [label="i1 = i1 + 1",];
+    "7"->"8";
+    "8"->"9";
+    "9"->"5";
+    "10" [label="$f4 = (float) i0",];
+    "9"->"10";
+    "11" [label="f1 = f0 / $f4",];
+    "10"->"11";
+    "12" [style=filled,fillcolor=lightgray,label="return f1",];
+    "11"->"12";
+}

@@ -1,0 +1,35 @@
+digraph "int hammingDist_L_EQ_m4(float[],float[],int)" {
+    label="int hammingDist_L_EQ_m4(float[],float[],int)";
+    node [shape=box];
+    "0" [style=filled,fillcolor=gray,label="r0 := @parameter0",];
+    "1" [label="r1 := @parameter1",];
+    "0"->"1";
+    "2" [label="i0 := @parameter2",];
+    "1"->"2";
+    "3" [label="i1 = 0",];
+    "2"->"3";
+    "4" [label="i2 = 0",];
+    "3"->"4";
+    "5" [label="goto label2",];
+    "4"->"5";
+    "12" [label="label2: $i4 = i0 - 1",];
+    "5"->"12";
+    "6" [label="label0: $f0 = r0[i2]",];
+    "7" [label="$f1 = r1[i2]",];
+    "6"->"7";
+    "8" [label="$b3 = $f0 cmpl $f1",];
+    "7"->"8";
+    "9" [label="if $b3 == 0 goto label1",];
+    "8"->"9";
+    "10" [label="i1 = i1 + 1",];
+    "9"->"10";
+    "11" [label="label1: i2 = i2 + 1",];
+    "9"->"11";
+    "10"->"11";
+    "11"->"12";
+    "13" [label="if i2 <= $i4 goto label0",];
+    "12"->"13";
+    "13"->"6";
+    "14" [style=filled,fillcolor=lightgray,label="return i1",];
+    "13"->"14";
+}

@@ -1,0 +1,36 @@
+digraph "float calWeightedAverage_L_NEQ_m2(float[],float[],int)" {
+    label="float calWeightedAverage_L_NEQ_m2(float[],float[],int)";
+    node [shape=box];
+    "0" [style=filled,fillcolor=gray,label="r0 := @parameter0",];
+    "1" [label="r1 := @parameter1",];
+    "0"->"1";
+    "2" [label="i0 := @parameter2",];
+    "1"->"2";
+    "3" [label="f0 = 0.0F",];
+    "2"->"3";
+    "4" [label="i1 = 0",];
+    "3"->"4";
+    "5" [label="goto label1",];
+    "4"->"5";
+    "12" [label="label1: if i1 < i0 goto label0",];
+    "5"->"12";
+    "6" [label="label0: $f2 = r0[i1]",];
+    "7" [label="$f3 = neg $f2",];
+    "6"->"7";
+    "8" [label="$f4 = r1[i1]",];
+    "7"->"8";
+    "9" [label="$f5 = $f3 * $f4",];
+    "8"->"9";
+    "10" [label="f0 = f0 + $f5",];
+    "9"->"10";
+    "11" [label="i1 = i1 + 1",];
+    "10"->"11";
+    "11"->"12";
+    "12"->"6";
+    "13" [label="$f6 = (float) i0",];
+    "12"->"13";
+    "14" [label="f1 = f0 / $f6",];
+    "13"->"14";
+    "15" [style=filled,fillcolor=lightgray,label="return f1",];
+    "14"->"15";
+}
