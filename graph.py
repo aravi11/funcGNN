@@ -7,15 +7,26 @@ import json
 import concurrent.futures as cf
 import time as t
 
+from VanillaAED import VanillaAED
+from VanillaHED import VanillaHED
+import os
+import glob
 
-def getGraphDiff(files, index):
-    print("Started pair with index:  "+ str(index))
+iter = 0
+def getFinishedStatus():
+    iter +=1
+    print('*******\t' + str(iter)+ "\t*******")
+
+
+def getGraphDiff(files):
+
     startTime = t.perf_counter()
-    dotFile_data_path = './DotFiles/'
+    dotFile_data_path = './maltesque/'
     file1 = files.split(',')[0]
     file2 = files.split(',')[1]
     g1_name = file1.split('.')[0]  # gets the name of first dotFile without its extension
     g2_name = file2.split('.')[0]  # gets the name of second dotFile without its extension
+    print("\n Started pair:  "+ str(g1_name) + ', ' + str(g2_name))
 
     graph_1 = nx.drawing.nx_pydot.read_dot(str(dotFile_data_path) + str(file1))
     graph_2 = nx.drawing.nx_pydot.read_dot(str(dotFile_data_path) + str(file2))
@@ -25,20 +36,39 @@ def getGraphDiff(files, index):
     endTime = t.perf_counter()
     totalTime = endTime - startTime
 
-    print("Finished pair with index:  "+ str(index))
-
+    print("\n >>>Finished pair:  "+ str(g1_name) + ', ' + str(g2_name))
+    #getFinishedStatus()
     #print('Total time : '+str(totalTime)+ '\n')
 
 def runParallelCode(pairList):
 
-    with cf.ProcessPoolExecutor(max_workers =45) as executor:
-        results = [executor.submit(getGraphDiff, files, pairList.index(files)) for files in pairList]
+    with cf.ProcessPoolExecutor(max_workers =2) as executor:
 
-
-    for f in cf.as_completed(results):
-        if str(type(f.result()))=="<class 'NoneType'>":
+        try:
+            for future in cf.as_completed((executor.map(getGraphDiff, pairList, timeout=5000)), timeout=5000):
+                print(future.result(timeout = 5000))
+        except cf._base.TimeoutError:
+            print("Time limit exceeded")
             pass
-        else: print(">>>>>>>>" + str(f.result()))
+
+
+
+
+
+'''
+    with concurrent.futures.ProcessPoolExecutor(max_workers=len(max_numbers)) as executor:
+        try:
+            for future in concurrent.futures.as_completed(executor.map(run_loop, max_numbers, timeout=1), timeout=1):
+                print(future.result(timeout=1))
+        except concurrent.futures._base.TimeoutError:
+            print("This took to long...")
+            stop_process_pool(executor)
+
+def stop_process_pool(executor):
+    for pid, processes in executor._processes.items():
+        process.terminate()
+    executor.shutdown()
+'''
 
 
 def getJsonData(graph_1,graph_2):
@@ -76,8 +106,16 @@ def getJsonData(graph_1,graph_2):
             nodeLabelList_g2.insert(i, nodeList_g2[i][1].get('label').replace('"', ''))
 
     # get graph edit distance
-    ged = nx.graph_edit_distance(sortedIntGraph_1, sortedIntGraph_2, node_match=return_eq)
-    #ged = 2 #only for testing. Comment while running it in production
+    #ged = nx.graph_edit_distance(sortedIntGraph_1, sortedIntGraph_2, node_match=return_eq) Commented since its too time expensive
+
+    #Instead we calculate approximate GED using hed
+    #aed = VanillaAED()
+    hed = VanillaHED()
+    distHED, _ = hed.ged(sortedIntGraph_1, sortedIntGraph_2)
+
+
+
+
 
     # generate the json files
     jsonDict = {}
@@ -85,7 +123,7 @@ def getJsonData(graph_1,graph_2):
     jsonDict["graph_2"] = g2_edgeList
     jsonDict["labels_1"] = nodeLabelList_g1
     jsonDict["labels_2"] = nodeLabelList_g2
-    jsonDict["ged"] = int(ged)
+    jsonDict["hed"] = int(distHED)
 
     #print(jsonDict)
     return jsonDict
@@ -104,7 +142,7 @@ def main(): #main function from where the program starts
     dotFileList= []
     #dotFile_data_path = './DotFiles/test'
 
-    with open('./filenames.txt', 'r') as csvFile:
+    with open('./maltesque.txt', 'r') as csvFile:
         reader = csv.reader(csvFile)
         for row in reader:
             dotName = str(row).replace('[', '').replace(']','').replace("'","").strip()
@@ -127,8 +165,5 @@ def main(): #main function from where the program starts
     runParallelCode(pairList)
 
 if __name__ == '__main__':
-    startTime = t.perf_counter()
+
     main()
-    endTime = t.perf_counter()
-    totalTime = endTime - startTime
-    print("Total Time : " + str(totalTime))

@@ -1,0 +1,31 @@
+digraph "float findMax(float[],int)" {
+    label="float findMax(float[],int)";
+    node [shape=box];
+    "0" [style=filled,fillcolor=gray,label="r0 := @parameter0",];
+    "1" [label="i0 := @parameter1",];
+    "0"->"1";
+    "2" [label="f0 = r0[0]",];
+    "1"->"2";
+    "3" [label="i1 = 1",];
+    "2"->"3";
+    "4" [label="goto label2",];
+    "3"->"4";
+    "11" [label="label2: if i1 < i0 goto label0",];
+    "4"->"11";
+    "5" [label="label0: $f1 = r0[i1]",];
+    "6" [label="$b2 = $f1 cmpl f0",];
+    "5"->"6";
+    "7" [label="if $b2 <= 0 goto label1",];
+    "6"->"7";
+    "8" [label="f0 = r0[i1]",];
+    "7"->"8";
+    "10" [label="label1: i1 = i1 + 1",];
+    "7"->"10";
+    "9" [label="goto label1",];
+    "8"->"9";
+    "9"->"10";
+    "10"->"11";
+    "11"->"5";
+    "12" [style=filled,fillcolor=lightgray,label="return f0",];
+    "11"->"12";
+}

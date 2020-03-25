@@ -1,0 +1,35 @@
+digraph "int countK_DC_EQ_m3(float[],int,float)" {
+    label="int countK_DC_EQ_m3(float[],int,float)";
+    node [shape=box];
+    "0" [style=filled,fillcolor=gray,label="r0 := @parameter0",];
+    "1" [label="i0 := @parameter1",];
+    "0"->"1";
+    "2" [label="f0 := @parameter2",];
+    "1"->"2";
+    "3" [label="z0 = 0",];
+    "2"->"3";
+    "4" [label="i1 = 0",];
+    "3"->"4";
+    "5" [label="i2 = 0",];
+    "4"->"5";
+    "6" [label="goto label2",];
+    "5"->"6";
+    "13" [label="label2: if i2 < i0 goto label0",];
+    "6"->"13";
+    "7" [label="label0: $f1 = r0[i2]",];
+    "8" [label="$b3 = $f1 cmpl f0",];
+    "7"->"8";
+    "9" [label="if $b3 != 0 goto label1",];
+    "8"->"9";
+    "10" [label="i1 = i1 + 1",];
+    "9"->"10";
+    "12" [label="label1: i2 = i2 + 1",];
+    "9"->"12";
+    "11" [label="i4 = i1 + 1",];
+    "10"->"11";
+    "11"->"12";
+    "12"->"13";
+    "13"->"7";
+    "14" [style=filled,fillcolor=lightgray,label="return i1",];
+    "13"->"14";
+}
