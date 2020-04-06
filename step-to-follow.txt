@@ -1,0 +1,14 @@
+1. After logging in to the system go to the SimGNN folder
+
+2. Type the command to active the virtual environment: source ../clone_env/bin/activte
+
+3. Pull the latest version from the GIt using this command: git pull origin master
+
+4. Once the latest version of Git is pulled run the follwing command to train the deep learning network: nohup python src/main.py --epochs 500 --batch-size 512 --histogram --bins 32 --dropout 0.2 & 
+
+5. Press Enter twice and type the following command: tail -f nohup.out 
+
+
+ 
+
+

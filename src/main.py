@@ -13,7 +13,6 @@ def main():
     tab_printer(args)
     trainer = SimGNNTrainer(args)
     trainer.fit()
-    trainer.score()
 
 if __name__ == "__main__":
     main()

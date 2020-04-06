@@ -38,9 +38,10 @@ class SimGNN(torch.nn.Module):
         Creating the layers.
         """
         self.calculate_bottleneck_features()
-        self.convolution_1 = GCNConv(self.number_labels, self.args.filters_1)
-        self.convolution_2 = GCNConv(self.args.filters_1, self.args.filters_2)
-        self.convolution_3 = GCNConv(self.args.filters_2, self.args.filters_3)
+        self.convolution_1 = GCNConv(self.number_labels, self.args.filters_1, improved = True)
+        self.convolution_2 = GCNConv(self.args.filters_1, self.args.filters_2, improved = True)
+        self.convolution_3 = GCNConv(self.args.filters_2, self.args.filters_3, improved = True)
+        self.convolution_4 = GCNConv(self.args.filters_3, self.args.filters_3, improved=True)
         self.attention = AttentionModule(self.args)
         self.tensor_network = TenorNetworkModule(self.args)
         self.fully_connected_first = torch.nn.Linear(self.feature_count,
@@ -52,7 +53,7 @@ class SimGNN(torch.nn.Module):
         Calculate histogram from similarity matrix.
         :param abstract_features_1: Feature matrix for graph 1.
         :param abstract_features_2: Feature matrix for graph 2.
-        :return hist: Histsogram of similarity scores.
+        :return hist: Histogram of similarity scores.
         """
         scores = torch.mm(abstract_features_1, abstract_features_2).detach()
         scores = scores.view(-1, 1)
@@ -81,6 +82,12 @@ class SimGNN(torch.nn.Module):
                                                training=self.training)
 
         features = self.convolution_3(features, edge_index)
+        features = torch.nn.functional.relu(features)
+        features = torch.nn.functional.dropout(features,
+                                               p=self.args.dropout,
+                                               training=self.training)
+
+        features = self.convolution_4(features, edge_index)
         return features
 
     def forward(self, data):
@@ -124,6 +131,7 @@ class SimGNNTrainer(object):
         self.args = args
         self.initial_label_enumeration()
         self.setup_model()
+
 
     def setup_model(self):
         """
@@ -193,7 +201,7 @@ class SimGNNTrainer(object):
 
         norm_ged = data["ged"]/(0.5*(len(data["labels_1"])+len(data["labels_2"])))
 
-        new_data["target"] = torch.from_numpy(np.exp(-norm_ged).reshape(1, 1)).view(-1).float()
+        new_data["target"] = torch.from_numpy(np.exp(-norm_ged).reshape(1, 1)).float()
         return new_data
 
     def process_batch(self, batch):
@@ -203,17 +211,29 @@ class SimGNNTrainer(object):
         :return loss: Loss on the batch.
         """
         self.optimizer.zero_grad()
-        losses = 0
+        losses =0
         for graph_pair in batch:
             data = process_pair(graph_pair)
             data = self.transfer_to_torch(data)
             target = data["target"]
             prediction = self.model(data)
-            losses = losses + torch.nn.functional.mse_loss(data["target"], prediction)
+            losses = losses + torch.nn.functional.mse_loss(prediction, data["target"])
         losses.backward(retain_graph=True)
         self.optimizer.step()
         loss = losses.item()
         return loss
+
+    def get_train_baseline_error(self):
+        """
+        Calculates the baseline error of the training data
+        """
+        self.train_ground_truth = []
+        for graph_pair in tqdm(self.training_graphs):
+            data = process_pair(graph_pair)
+            self.train_ground_truth.append(calculate_normalized_ged(data))
+        norm_ged_mean = np.mean(self.train_ground_truth)
+        base_train_error = np.mean([(n - norm_ged_mean) ** 2 for n in self.train_ground_truth])
+        print("\nBaseline Training error: " + str(round(base_train_error, 5)))
 
     def fit(self):
         """
@@ -221,24 +241,33 @@ class SimGNNTrainer(object):
         """
         print("\nModel training.\n")
 
+        #self.get_train_baseline_error()
+
         self.optimizer = torch.optim.Adam(self.model.parameters(),
                                           lr=self.args.learning_rate,
                                           weight_decay=self.args.weight_decay)
-
+        epoch_counter =0
+        loss =0
         self.model.train()
         epochs = trange(self.args.epochs, leave=True, desc="Epoch")
         for epoch in epochs:
             batches = self.create_batches()
             self.loss_sum = 0
-            main_index = 0
+            self.epoch_loss =0
+            self.node_processed = 0
             for index, batch in tqdm(enumerate(batches), total=len(batches), desc="Batches"):
-                loss_score = self.process_batch(batch)
-                main_index = main_index + len(batch)
-                self.loss_sum = self.loss_sum + loss_score * len(batch)
-                loss = self.loss_sum/main_index
+                self.epoch_loss = self.epoch_loss+ self.process_batch(batch)
+                self.node_processed = self.node_processed + len(batch)
+                loss = self.epoch_loss/self.node_processed
                 epochs.set_description("Epoch (Loss=%g)" % round(loss, 5))
+            with open("./outputFiles/train_error_graph.txt", "a") as train_error_writer:
+                # Append 'hello' at the end of file
+                train_error_writer.write('\n' + str(epoch_counter) + ',' + str(round(loss, 5)))
+            train_error_writer.close()
+            self.score(epoch_counter)
+            epoch_counter += 1
 
-    def score(self):
+    def score(self, epoch_counter):
         """
         Scoring on the test set.
         """
@@ -246,15 +275,20 @@ class SimGNNTrainer(object):
         self.model.eval()
         self.scores = []
         self.ground_truth = []
-        for graph_pair in tqdm(self.testing_graphs):
-            data = process_pair(graph_pair)
+        for test_graph_pair in tqdm(self.testing_graphs):
+            data = process_pair(test_graph_pair)
             self.ground_truth.append(calculate_normalized_ged(data))
             data = self.transfer_to_torch(data)
             target = data["target"]
             prediction = self.model(data)
-            print("\n" + str(graph_pair) + "- " + "Similarity/Target: " + str(prediction) + " / " + str(target))
+            print("\n" + str(test_graph_pair) + "- " + "Similarity/Target: " + str(prediction) + " / " + str(target))
             self.scores.append(calculate_loss(prediction, target))
-        self.print_evaluation()
+            #self.scores.append(torch.nn.functional.mse_loss(prediction, data["target"]))
+        model_error = self.print_evaluation()
+        print('\n\n >>>>>>>>>>>>>>>>>>\t' + str(model_error) +'\n')
+        with open("./outputFiles/test_error_graph.txt", "a") as test_error_writer:
+            test_error_writer.write('\n'+str(epoch_counter) + ',' + str(model_error))
+        test_error_writer.close()
 
     def print_evaluation(self):
         """
@@ -264,4 +298,8 @@ class SimGNNTrainer(object):
         base_error = np.mean([(n-norm_ged_mean)**2 for n in self.ground_truth])
         model_error = np.mean(self.scores)
         print("\nBaseline error: " +str(round(base_error, 5))+".")
-        print("\nModel test error: " +str(round(model_error, 5))+".")
+        print("\nModel test error: " + str(round(model_error, 5)) + ".")
+        return str(round(model_error, 5))
+
+
+

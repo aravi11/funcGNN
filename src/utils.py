@@ -25,16 +25,17 @@ def process_pair(path):
     data = json.load(open(path))
     return data
 
+
 def calculate_loss(prediction, target):
     """
     Calculating the squared loss on the normalized GED.
     :param prediction: Predicted log value of GED.
-    :param target: Factual log transofmed GED.
-    :return score: Squared error.
+    :param target: Actual log value of GED.
+    :return score: Log Squared Error.
     """
-    prediction = -math.log(prediction)
-    target = -math.log(target)
-    score = (prediction-target)**2
+    log_prediction = -math.log(prediction)
+    log_target = -math.log(target)
+    score = (log_prediction - log_target)**2
     return score
 
 def calculate_normalized_ged(data):
