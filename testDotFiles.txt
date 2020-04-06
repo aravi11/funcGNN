@@ -1,5 +1,0 @@
-addTwoArrays_DC_EQ_m3.dot
-addTwoArrays.dot
-addTwoArrays_L_EQ_m1.dot
-addTwoArrays_L_EQ_m4.dot
-addTwoArrays_L_NEQ_m2.dot
