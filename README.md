@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 Installation Steps: 
 
 1. Download the git repo via command : \
@@ -24,3 +25,7 @@ Installation Steps:
    
 6.  The jsons created will be stored jsonFiles folder. We could create a training and testing set of these json files and use it to run the SIMGNN program.   
 
+=======
+# funcGNN
+CFG based program similarity using Graph Neural Networks
+>>>>>>> 1b52f39dbdd5d313660a9114c6e798bc8cc0d277
