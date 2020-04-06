@@ -1,0 +1,28 @@
+digraph "void bitwiseNot_L_EQ_m4(int[],int[],int)" {
+    label="void bitwiseNot_L_EQ_m4(int[],int[],int)";
+    node [shape=box];
+    "0" [style=filled,fillcolor=gray,label="r0 := @parameter0",];
+    "1" [label="r1 := @parameter1",];
+    "0"->"1";
+    "2" [label="i0 := @parameter2",];
+    "1"->"2";
+    "3" [label="i1 = 0",];
+    "2"->"3";
+    "4" [label="goto label1",];
+    "3"->"4";
+    "9" [label="label1: $i4 = i0 - 1",];
+    "4"->"9";
+    "5" [label="label0: $i2 = r0[i1]",];
+    "6" [label="$i3 = $i2 ^ -1",];
+    "5"->"6";
+    "7" [label="r1[i1] = $i3",];
+    "6"->"7";
+    "8" [label="i1 = i1 + 1",];
+    "7"->"8";
+    "8"->"9";
+    "10" [label="if i1 <= $i4 goto label0",];
+    "9"->"10";
+    "10"->"5";
+    "11" [style=filled,fillcolor=lightgray,label="return",];
+    "10"->"11";
+}
