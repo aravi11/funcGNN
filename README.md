@@ -1,10 +1,10 @@
-<<<<<<< HEAD
+
 Installation Steps: 
 
 1. Download the git repo via command : \
-***git clone https://github.com/Metamorph-KTH/CFG_Cloning.git*** \
-   Later go to the folder CFG_Cloning by command: \
-   ***cd CFG_Cloning***
+***git clone https://github.com/aravi11/funcGNN.git*** \
+   Later go to the folder funcGNN by command: \
+   ***cd funcGNN***
 
 2. Create a python 3 virtual environment to run so that it doesnt disturb other program's dependencies. Lets name the virtual environment as clone_env. Command: \
    ***virtualenv -p python3 clone_env*** \
@@ -18,14 +18,10 @@ Installation Steps:
 4. Once the virtual environement is setup, its time to install the dependencies. It is found in requirements.txt 
    Command: ***pip3 install -r requirements.txt*** 
 
-5. Now its time to generate the graph similarity jsons. The input graphs are provided in folder DotFiles. In case you want to add your own graph files, make sure to add the graph filenames to filenames.txt before executing. **(*Note this is very important)** You can do this by command:
-***ls ./DotFiles/ > filenames.txt***  
-   To run the graph.py file using command : 
-   ***python3 graph.py***
+5. To run the training program use command : 
+   ***python3 src/main.py***
    
-6.  The jsons created will be stored jsonFiles folder. We could create a training and testing set of these json files and use it to run the SIMGNN program.   
+6.  The output wil be stored in the outputFiles folder. 
 
 =======
-# funcGNN
-CFG based program similarity using Graph Neural Networks
->>>>>>> 1b52f39dbdd5d313660a9114c6e798bc8cc0d277
+
