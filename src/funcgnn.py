@@ -6,7 +6,7 @@ import random
 import numpy as np
 from tqdm import tqdm, trange
 from torch_geometric.nn import GCNConv
-from torch_geometric.nn import SAGEConv, GATConv
+from torch_geometric.nn import SAGEConv, GATConv, ARMAConv
 from layers import AttentionModule, TenorNetworkModule
 from utils import process_pair, calculate_loss, calculate_normalized_ged
 

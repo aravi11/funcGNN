@@ -33,18 +33,3 @@ plt.text(train_avg, max_ylim*0.9, ' Mean: {:.2f}'.format(train_avg))
 plt.text(170, 1092, 'Skew = 2.841', style='italic',bbox={'facecolor': 'gray', 'alpha': 0.5, 'pad': 10})
 
 plt.show()
-'''
-with open('./train_ged_distribution.txt','r') as test_error_graph:
-    plots = csv.reader(test_error_graph, delimiter=',')
-    for row in plots:
-        x.append(int(row[0]))
-        y.append(float(row[1]))
-
-plt.plot(x,y, label='Approximate GED Distribution')
-
-plt.xlabel('GED Value')
-plt.ylabel('Count')
-plt.title('Training Dataset Size - 40500')
-plt.legend()
-plt.show()
-'''
