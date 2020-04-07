@@ -1,4 +1,4 @@
-"""SimGNN class and runner."""
+"""funcGNN class and runner."""
 
 import glob
 import torch
@@ -6,10 +6,11 @@ import random
 import numpy as np
 from tqdm import tqdm, trange
 from torch_geometric.nn import GCNConv
+from torch_geometric.nn import SAGEConv, GATConv
 from layers import AttentionModule, TenorNetworkModule
 from utils import process_pair, calculate_loss, calculate_normalized_ged
 
-class SimGNN(torch.nn.Module):
+class funcGNN(torch.nn.Module):
     """
     SimGNN: A Neural Network Approach to Fast Graph Similarity Computation
     https://arxiv.org/abs/1808.05689
@@ -19,7 +20,7 @@ class SimGNN(torch.nn.Module):
         :param args: Arguments object.
         :param number_of_labels: Number of node labels.
         """
-        super(SimGNN, self).__init__()
+        super(funcGNN, self).__init__()
         self.args = args
         self.number_labels = number_of_labels
         self.setup_layers()
@@ -38,10 +39,10 @@ class SimGNN(torch.nn.Module):
         Creating the layers.
         """
         self.calculate_bottleneck_features()
-        self.convolution_1 = GCNConv(self.number_labels, self.args.filters_1, improved = True)
-        self.convolution_2 = GCNConv(self.args.filters_1, self.args.filters_2, improved = True)
-        self.convolution_3 = GCNConv(self.args.filters_2, self.args.filters_3, improved = True)
-        self.convolution_4 = GCNConv(self.args.filters_3, self.args.filters_3, improved=True)
+        self.convolution_1 = SAGEConv(self.number_labels, self.args.filters_1, normalize = True)
+        self.convolution_2 = SAGEConv(self.args.filters_1, self.args.filters_2, normalize = True)
+        self.convolution_3 = SAGEConv(self.args.filters_2, self.args.filters_3, normalize = True)
+        self.convolution_4 = SAGEConv(self.args.filters_3, self.args.filters_4, normalize = True)
         self.attention = AttentionModule(self.args)
         self.tensor_network = TenorNetworkModule(self.args)
         self.fully_connected_first = torch.nn.Linear(self.feature_count,
@@ -67,7 +68,7 @@ class SimGNN(torch.nn.Module):
         Making convolutional pass.
         :param edge_index: Edge indices.
         :param features: Feature matrix.
-        :return features: Absstract feature matrix.
+        :return features: Abstract feature matrix.
         """
         features = self.convolution_1(features, edge_index)
         features = torch.nn.functional.relu(features)
@@ -93,7 +94,7 @@ class SimGNN(torch.nn.Module):
     def forward(self, data):
         """
         Forward pass with graphs.
-        :param data: Data dictiyonary.
+        :param data: Data dictionary.
         :return score: Similarity score.
         """
         edge_index_1 = data["edge_index_1"]
@@ -120,7 +121,7 @@ class SimGNN(torch.nn.Module):
         score = torch.sigmoid(self.scoring_layer(scores))
         return score
 
-class SimGNNTrainer(object):
+class funcGNNTrainer(object):
     """
     SimGNN model trainer.
     """
@@ -137,7 +138,7 @@ class SimGNNTrainer(object):
         """
         Creating a SimGNN.
         """
-        self.model = SimGNN(self.args, self.number_of_labels)
+        self.model = funcGNN(self.args, self.number_of_labels)
 
     def initial_label_enumeration(self):
         """
@@ -259,10 +260,10 @@ class SimGNNTrainer(object):
                 self.epoch_loss = self.epoch_loss+ self.process_batch(batch)
                 self.node_processed = self.node_processed + len(batch)
                 loss = self.epoch_loss/self.node_processed
-                epochs.set_description("Epoch (Loss=%g)" % round(loss, 5))
+                epochs.set_description("Epoch (Loss=%g)" % round(loss, 6))
             with open("./outputFiles/train_error_graph.txt", "a") as train_error_writer:
                 # Append 'hello' at the end of file
-                train_error_writer.write('\n' + str(epoch_counter) + ',' + str(round(loss, 5)))
+                train_error_writer.write(str(epoch_counter) + ',' + str(round(loss, 6)) + '\n')
             train_error_writer.close()
             self.score(epoch_counter)
             epoch_counter += 1
@@ -287,7 +288,7 @@ class SimGNNTrainer(object):
         model_error = self.print_evaluation()
         print('\n\n >>>>>>>>>>>>>>>>>>\t' + str(model_error) +'\n')
         with open("./outputFiles/test_error_graph.txt", "a") as test_error_writer:
-            test_error_writer.write('\n'+str(epoch_counter) + ',' + str(model_error))
+            test_error_writer.write(str(epoch_counter) + ',' + str(model_error)+ '\n')
         test_error_writer.close()
 
     def print_evaluation(self):
@@ -297,9 +298,9 @@ class SimGNNTrainer(object):
         norm_ged_mean = np.mean(self.ground_truth)
         base_error = np.mean([(n-norm_ged_mean)**2 for n in self.ground_truth])
         model_error = np.mean(self.scores)
-        print("\nBaseline error: " +str(round(base_error, 5))+".")
-        print("\nModel test error: " + str(round(model_error, 5)) + ".")
-        return str(round(model_error, 5))
+        print("\nBaseline error: " +str(round(base_error, 6))+".")
+        print("\nModel test error: " + str(round(model_error, 6)) + ".")
+        return str(round(model_error, 6))
 
 
 
