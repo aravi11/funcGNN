@@ -27,22 +27,17 @@ def parameter_parser():
     parser.add_argument("--filters-1",
                         type=int,
                         default=256,
-	                help="Filters (neurons) in 1st convolution. Default is 256.")
+	                help="Filters (neurons) in 1st convolution. Default is 128.")
 
     parser.add_argument("--filters-2",
                         type=int,
                         default=128,
-	                help="Filters (neurons) in 2nd convolution. Default is 128.")
+	                help="Filters (neurons) in 2nd convolution. Default is 64.")
 
     parser.add_argument("--filters-3",
                         type=int,
                         default=64,
-	                help="Filters (neurons) in 3rd convolution. Default is 64.")
-
-    parser.add_argument("--filters-4",
-                        type=int,
-                        default=32,
-                        help="Filters (neurons) in 4rd convolution. Default is 32.")
+	                help="Filters (neurons) in 3rd convolution. Default is 32.")
 
     parser.add_argument("--tensor-neurons",
                         type=int,
@@ -57,12 +52,12 @@ def parameter_parser():
     parser.add_argument("--batch-size",
                         type=int,
                         default=512,
-	                help="Number of graph pairs per batch. Default is 512.")
+	                help="Number of graph pairs per batch. Default is 128.")
 
     parser.add_argument("--bins",
                         type=int,
-                        default=32,
-	                help="Similarity score bins. Default is 32.")
+                        default=16,
+	                help="Similarity score bins. Default is 16.")
 
     parser.add_argument("--dropout",
                         type=float,

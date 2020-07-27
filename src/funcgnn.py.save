@@ -1,4 +1,4 @@
-"""SimGNN class and runner."""
+"""funcGNN class and runner."""
 
 import glob
 import torch
@@ -9,17 +9,14 @@ from torch_geometric.nn import GCNConv
 from layers import AttentionModule, TenorNetworkModule
 from utils import process_pair, calculate_loss, calculate_normalized_ged
 
-class SimGNN(torch.nn.Module):
-    """
-    SimGNN: A Neural Network Approach to Fast Graph Similarity Computation
-    https://arxiv.org/abs/1808.05689
-    """
+class funcGNN(torch.nn.Module):
+
     def __init__(self, args, number_of_labels):
         """
         :param args: Arguments object.
         :param number_of_labels: Number of node labels.
         """
-        super(SimGNN, self).__init__()
+        super(funcGNN, self).__init__()
         self.args = args
         self.number_labels = number_of_labels
         self.setup_layers()
@@ -113,9 +110,9 @@ class SimGNN(torch.nn.Module):
         score = torch.sigmoid(self.scoring_layer(scores))
         return score
 
-class SimGNNTrainer(object):
+class funcGNNTrainer(object):
     """
-    SimGNN model trainer.
+    funcGNN model trainer.
     """
     def __init__(self, args):
         """
@@ -127,9 +124,9 @@ class SimGNNTrainer(object):
 
     def setup_model(self):
         """
-        Creating a SimGNN.
+        Creating a funcGNN.
         """
-        self.model = SimGNN(self.args, self.number_of_labels)
+        self.model = funcGNN(self.args, self.number_of_labels)
 
     def initial_label_enumeration(self):
         """

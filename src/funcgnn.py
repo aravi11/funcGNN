@@ -6,14 +6,15 @@ import random
 import numpy as np
 from tqdm import tqdm, trange
 from torch_geometric.nn import GCNConv
-from torch_geometric.nn import SAGEConv, GATConv, ARMAConv
+from torch_geometric.nn import SAGEConv
 from layers import AttentionModule, TenorNetworkModule
 from utils import process_pair, calculate_loss, calculate_normalized_ged
+import concurrent.futures as cf
+import time
 
 class funcGNN(torch.nn.Module):
     """
-    SimGNN: A Neural Network Approach to Fast Graph Similarity Computation
-    https://arxiv.org/abs/1808.05689
+    funGNN: A Graph Neural Network Approach to Program Similarity 
     """
     def __init__(self, args, number_of_labels):
         """
@@ -42,11 +43,11 @@ class funcGNN(torch.nn.Module):
         self.convolution_1 = SAGEConv(self.number_labels, self.args.filters_1, normalize = True)
         self.convolution_2 = SAGEConv(self.args.filters_1, self.args.filters_2, normalize = True)
         self.convolution_3 = SAGEConv(self.args.filters_2, self.args.filters_3, normalize = True)
-        self.convolution_4 = SAGEConv(self.args.filters_3, self.args.filters_4, normalize = True)
         self.attention = AttentionModule(self.args)
         self.tensor_network = TenorNetworkModule(self.args)
         self.fully_connected_first = torch.nn.Linear(self.feature_count,
                                                      self.args.bottle_neck_neurons)
+
         self.scoring_layer = torch.nn.Linear(self.args.bottle_neck_neurons, 1)
 
     def calculate_histogram(self, abstract_features_1, abstract_features_2):
@@ -83,12 +84,6 @@ class funcGNN(torch.nn.Module):
                                                training=self.training)
 
         features = self.convolution_3(features, edge_index)
-        features = torch.nn.functional.relu(features)
-        features = torch.nn.functional.dropout(features,
-                                               p=self.args.dropout,
-                                               training=self.training)
-
-        features = self.convolution_4(features, edge_index)
         return features
 
     def forward(self, data):
@@ -123,7 +118,7 @@ class funcGNN(torch.nn.Module):
 
 class funcGNNTrainer(object):
     """
-    SimGNN model trainer.
+    funcGNN model trainer.
     """
     def __init__(self, args):
         """
@@ -136,7 +131,7 @@ class funcGNNTrainer(object):
 
     def setup_model(self):
         """
-        Creating a SimGNN.
+        Creating a funcGNN.
         """
         self.model = funcGNN(self.args, self.number_of_labels)
 
@@ -147,6 +142,7 @@ class funcGNNTrainer(object):
         print("\nEnumerating unique labels.\n")
         self.training_graphs = glob.glob(self.args.training_graphs + "*.json")
         self.testing_graphs = glob.glob(self.args.testing_graphs + "*.json")
+        self.random_graphs = glob.glob(self.args.random_graphs + "*.json")
         graph_pairs = self.training_graphs + self.testing_graphs
         self.global_labels = set()
         for graph_pair in tqdm(graph_pairs):
@@ -184,7 +180,6 @@ class funcGNNTrainer(object):
         edges_2 = torch.from_numpy(np.array(edges_2, dtype=np.int64).T).type(torch.long)
 
         features_1, features_2 = [], []
-
         for n in data["labels_1"]:
             features_1.append([1.0 if self.global_labels[n] == i else 0.0 for i in self.global_labels.values()])
 
@@ -242,13 +237,14 @@ class funcGNNTrainer(object):
         """
         print("\nModel training.\n")
 
-        #self.get_train_baseline_error()
+        path = './outFiles/test/model/'
 
         self.optimizer = torch.optim.Adam(self.model.parameters(),
                                           lr=self.args.learning_rate,
                                           weight_decay=self.args.weight_decay)
         epoch_counter =0
         loss =0
+        bool = False
         self.model.train()
         epochs = trange(self.args.epochs, leave=True, desc="Epoch")
         for epoch in epochs:
@@ -261,35 +257,39 @@ class funcGNNTrainer(object):
                 self.node_processed = self.node_processed + len(batch)
                 loss = self.epoch_loss/self.node_processed
                 epochs.set_description("Epoch (Loss=%g)" % round(loss, 6))
-            with open("./outputFiles/train_error_graph.txt", "a") as train_error_writer:
-                # Append 'hello' at the end of file
+            with open("./outputFiles/test/train_error_graph.txt", "a") as train_error_writer:
+               
                 train_error_writer.write(str(epoch_counter) + ',' + str(round(loss, 6)) + '\n')
             train_error_writer.close()
-            self.score(epoch_counter)
+            #print("Model's state_dict:<<<<<<<<<<<<<<<<<")
+            
+            torch.save(self.model.state_dict(), './outputFiles/test/model_state.pth')
             epoch_counter += 1
+            self.score(epoch_counter)
 
     def score(self, epoch_counter):
-        """
-        Scoring on the test set.
-        """
-        print("\n\nModel evaluation.\n")
-        self.model.eval()
-        self.scores = []
-        self.ground_truth = []
-        for test_graph_pair in tqdm(self.testing_graphs):
-            data = process_pair(test_graph_pair)
-            self.ground_truth.append(calculate_normalized_ged(data))
-            data = self.transfer_to_torch(data)
-            target = data["target"]
-            prediction = self.model(data)
-            print("\n" + str(test_graph_pair) + "- " + "Similarity/Target: " + str(prediction) + " / " + str(target))
-            self.scores.append(calculate_loss(prediction, target))
-            #self.scores.append(torch.nn.functional.mse_loss(prediction, data["target"]))
-        model_error = self.print_evaluation()
-        print('\n\n >>>>>>>>>>>>>>>>>>\t' + str(model_error) +'\n')
-        with open("./outputFiles/test_error_graph.txt", "a") as test_error_writer:
-            test_error_writer.write(str(epoch_counter) + ',' + str(model_error)+ '\n')
-        test_error_writer.close()
+            """
+            Scoring on the test set.
+            """
+            print("\n\nModel evaluation.\n")
+            start_time = time.time()
+            self.model.eval()
+            self.scores = []
+            self.ground_truth = []
+            for test_graph_pair in tqdm(self.testing_graphs):
+                data = process_pair(test_graph_pair)
+                self.ground_truth.append(calculate_normalized_ged(data))
+                data = self.transfer_to_torch(data)
+                target = data["target"]
+                prediction = self.model(data)
+                print("\n" + str(test_graph_pair) + "- " + "Similarity/Target: " + str(prediction) + " / " + str(target))
+                self.scores.append(calculate_loss(prediction, target))
+            print("--- %s seconds ---" % (time.time() - start_time))
+            model_error = self.print_evaluation()
+            print('\n\n >>>>>>>>>>>>>>>>>>\t' + str(model_error) +'\n')
+            with open("./outputFiles/test/test_error_graph.txt", "a") as test_error_writer:
+                test_error_writer.write(str(epoch_counter) + ',' + str(model_error)+ '\n')
+            test_error_writer.close()
 
     def print_evaluation(self):
         """
@@ -298,9 +298,80 @@ class funcGNNTrainer(object):
         norm_ged_mean = np.mean(self.ground_truth)
         base_error = np.mean([(n-norm_ged_mean)**2 for n in self.ground_truth])
         model_error = np.mean(self.scores)
-        print("\nBaseline error: " +str(round(base_error, 6))+".")
-        print("\nModel test error: " + str(round(model_error, 6)) + ".")
+        #print("\nBaseline error: " +str(round(base_error, 6))+".")
+        #print("\nModel test error: " + str(round(model_error, 6)) + ".")
         return str(round(model_error, 6))
+
+    def load_model_parallel(self, pairList):
+
+        #print("Parallel Execution of funcGNN from pretrained model")
+        #self.model = funcGNN(self.args, self.number_of_labels)
+        #self.model.load_state_dict(torch.load('./model_state.pth'))
+        #self.model.eval()
+        data = process_pair(pairList)
+        self.ground_truth.append(calculate_normalized_ged(data))
+        data = self.transfer_to_torch(data)
+        target = data["target"]
+        prediction = self.model(data)
+        #print("\n" + str(pairList) + "- " + "Similarity/Target: " + str(prediction) + " / " + str(target))
+        self.scores.append(calculate_loss(prediction, target))
+
+
+    def runParallelCode(self, pairList):
+        '''
+        with cf.ProcessPoolExecutor(max_workers =2) as executor:
+            try:
+                for future in cf.as_completed((executor.map(self.load_model_parallel, pairList, timeout=500)), timeout=500):
+                    if str(type(f.result()))=="<class 'NoneType'>":
+                        pass
+                    else:
+                        print('Done')
+            except cf._base.TimeoutError:
+                print("Time limit exceeded")
+                pass
+        '''
+        with cf.ProcessPoolExecutor(max_workers =5) as executor:
+            results = [executor.submit(self.load_model_parallel, files) for files in pairList]
+
+    def load_model(self):
+        print("\nSerial Execution of funcGNN from pretrained model")
+        start_time = time.time()
+        self.model = funcGNN(self.args, self.number_of_labels)
+        self.model.load_state_dict(torch.load('./model_state.pth'))
+        self.model.eval()
+        self.scores = []
+        self.ground_truth = []
+        for test_graph_pair in tqdm(self.random_graphs):
+            data = process_pair(test_graph_pair)
+            self.ground_truth.append(calculate_normalized_ged(data))
+            data = self.transfer_to_torch(data)
+            target = data["target"]
+            prediction = self.model(data)
+            #print("\n" + str(test_graph_pair) + "- " + "Similarity/Target: " + str(prediction) + " / " + str(target))
+            self.scores.append(calculate_loss(prediction, target))
+            self.scores.append(torch.nn.functional.mse_loss(prediction, data["target"]))
+        print("--- %s seconds ---" % (time.time() - start_time))
+        #model_error = self.print_evaluation()
+        #print('\n\n >>>>>>>>>>>>>>>>>>\t' + str(model_error) +'\n')
+
+
+    def start_parallel(self):
+
+        print("Parallel Execution of funcGNN from pretrained model")
+        start_time = time.time()
+        self.graph_pairList = []
+        self.scores = []
+        self.ground_truth = []
+        self.model = funcGNN(self.args, self.number_of_labels)
+        self.model.load_state_dict(torch.load('./model_state.pth'))
+        self.model.eval()
+
+        for test_graph_pair in tqdm(self.random_graphs):
+            self.graph_pairList.append(test_graph_pair)
+        self.runParallelCode(self.graph_pairList)
+        print("--- %s seconds ---" % (time.time() - start_time))
+        #model_error = self.print_evaluation()
+        #print('\n\n >>>>>>>>>>>>>>>>>>\t' + str(model_error) +'\n')
 
 
 

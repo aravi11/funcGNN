@@ -13,6 +13,10 @@ def main():
     tab_printer(args)
     trainer = funcGNNTrainer(args)
     trainer.fit()
+    #trainer.start_parallel()
+    #trainer.load_model()
+
+
 
 
 if __name__ == "__main__":
